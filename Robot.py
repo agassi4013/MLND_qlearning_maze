@@ -14,8 +14,8 @@ class Robot(object):
         self.gamma = gamma
 
         self.epsilon0 = epsilon0
-        self.epsilon = 0.9
-        self.testing = 0
+        self.epsilon = epsilon0
+        self.e_dcr = 0.99
 
         self.Qtable = {}
         self.reset()
@@ -45,7 +45,7 @@ class Robot(object):
             pass
         else:
             # TODO 2. Update parameters when learning
-            self.epsilon0 *= self.epsilon
+            self.epsilon *= self.e_dcr
 
         return self.epsilon
 
@@ -69,8 +69,7 @@ class Robot(object):
         if state in self.Qtable.keys():
             return
         else:
-            val = [0]*len(self.valid_actions)
-            self.Qtable[state] = dict(zip(self.valid_actions,val))
+            self.Qtable.setdefault(state, {a: 0.0 for a in self.valid_actions})
 
     def choose_action(self):
         """
@@ -80,9 +79,8 @@ class Robot(object):
             # TODO 5. Return whether do random choice
             # hint: generate a random number, and compare
             # it with epsilon
-            option = [1,0]
-            mov = random.choices(option,[(1-self.epsilon0), self.epsilon0])
-            return mov == [0]
+            
+            return random.random()<self.epsilon
 
         if self.learning:
             if is_random_exploration():
@@ -90,10 +88,12 @@ class Robot(object):
                 return random.choice(self.valid_actions)
             else:
                 # TODO 7. Return action with highest q value
-                return max(self.Qtable[self.state].items(), key=lambda x:x[1])[0]
+                return max(self.Qtable[self.state], key=self.Qtable[self.state].get)
+                #return max(self.Qtable[self.state].items(), key=lambda x:x[1])[0]
         elif self.testing:
             # TODO 7. choose action with highest q value
-            return max(self.Qtable[self.state].items(), key=lambda x:x[1])[0]
+            return max(self.Qtable[self.state], key=self.Qtable[self.state].get)
+            #return max(self.Qtable[self.state].items(), key=lambda x:x[1])[0]
         else:
             # TODO 6. Return random choose action
             return random.choice(self.valid_actions)
